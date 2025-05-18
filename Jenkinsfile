@@ -1,5 +1,9 @@
 pipeline {
     agent any 
+
+    environment {
+        IMAGE_NAME = "adomicarts/nodeapp-cuban:${BUILD_NUMBER}"
+    }
     
     stages { 
         stage('SCM Checkout') {
@@ -11,21 +15,23 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {  
-                bat 'docker build -t adomicarts/nodeapp-cuban:%BUILD_NUMBER% .'
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([string(credentialsId: 'samin-docker', variable: 'samindocker')]) {
-                    script {
-                        bat "docker login -u adomicarts -p %samindocker%"
-                    }
-                }
+                withCredentials([string(credentialsId: 'docker_p455_ID', variable: 'docker_p455')]) {
+                    sh '''
+                        echo "Loging to docker"
+                        echo "$docker_p455" | docker login -u janithdev --password-stdin
+                        echo "Done"
+                        '''
+}
             }
         }
         stage('Push Image') {
             steps {
-                bat 'docker push adomicarts/nodeapp-cuban:%BUILD_NUMBER%'
+                sh 'docker push $IMAGE_NAME'
             }
         }
     }
